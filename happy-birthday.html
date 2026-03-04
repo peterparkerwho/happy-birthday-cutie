@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Jawahar — Director's Cut</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=EB+Garamond:ital,wght@0,400;0,500;1,400;1,500&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+:root {
+  --black: #080808;
+  --deep: #0e0e0e;
+  --red: #C0392B;
+  --cream: #F0E6D0;
+  --muted: #4a4030;
+  --ink: #1a1612;
+}
+html { scroll-behavior: smooth; }
+body {
+  background: var(--black);
+  color: var(--cream);
+  font-family: 'EB Garamond', serif;
+  overflow-x: hidden;
+  cursor: auto;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* GRAIN */
+body::after {
+  content:''; position:fixed; inset:0; z-index:990; pointer-events:none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+  opacity: 0.04;
+  animation: gr 0.12s steps(1) infinite;
+}
+@keyframes gr {
+  0%{transform:translate(0,0)} 25%{transform:translate(-2px,1px)} 50%{transform:translate(1px,-2px)} 75%{transform:translate(-1px,2px)}
+}
+
+/* ── CLAPPER INTRO ── */
+#clapper-screen {
+  position:fixed; inset:0; z-index:500;
+  background:var(--black);
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:0;
+  transition: opacity 0.9s ease, visibility 0.9s;
+}
+#clapper-screen.gone { opacity:0; visibility:hidden; pointer-events:none; }
+
+.clapper {
+  width:260px; cursor:pointer;
+  filter: drop-shadow(0 16px 40px rgba(192,57,43,0.2));
+  transition: filter 0.3s, transform 0.15s;
+  user-select:none;
+}
+.clapper:active { transform:scale(0.96); }
+.clapper:active .clap-top { transform: rotate(-20deg); }
+
+.clap-top {
+  width:260px; height:62px;
+  background:#111; border:1px solid #222;
+  border-radius:4px 4px 0 0;
+  display:flex; overflow:hidden;
+  transform-origin: top center;
+  transition: transform 0.35s ease;
+}
+.clap-stripe { flex:1; }
+.s1 { background: repeating-linear-gradient(90deg,#000 0,#000 16px,#ddd 16px,#ddd 32px); }
+.s2 { background: repeating-linear-gradient(90deg,var(--red) 0,var(--red) 16px,#000 16px,#000 32px); }
+
+.clap-body {
+  width:260px; background:#0d0d0d;
+  border:1px solid #1a1a1a; border-top:none;
+  border-radius:0 0 4px 4px;
+  padding:16px 18px 20px;
+}
+.clap-row {
+  display:flex; justify-content:space-between;
+  border-bottom:1px solid #161616; padding:5px 0;
+  font-family:'Space Mono',monospace;
+}
+.clap-row:last-child { border-bottom:none; }
+.cl { font-size:8px; letter-spacing:2px; color:#2a2a2a; text-transform:uppercase; }
+.cv { font-size:10px; color:var(--cream); }
+.cv.r { color:var(--red); }
+
+.tap-hint {
+  margin-top:28px;
+  font-family:'Space Mono',monospace;
+  font-size:10px; letter-spacing:3px; color:#2a2a2a; text-transform:uppercase;
+  animation: blink 1.8s ease-in-out infinite;
+}
+@keyframes blink { 0%,100%{opacity:0.2} 50%{opacity:0.7} }
+
+/* SCANLINE */
+#swipe { position:fixed; inset:0; z-index:499; pointer-events:none; visibility:hidden; overflow:hidden; }
+#swipe.on { visibility:visible; }
+.sw { position:absolute; left:0; right:0; height:4px; background:var(--red); top:-4px; }
+#swipe.on .sw { animation: swipeDrop 0.55s ease forwards; }
+@keyframes swipeDrop { to { top:100vh; } }
+
+/* ── MAIN ── */
+#main { position:relative; z-index:10; display:none; }
+
+/* ── TITLE ── */
+#title-section {
+  min-height:100vh;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  padding:60px 24px; position:relative; overflow:hidden;
+  background: radial-gradient(ellipse 80% 60% at 50% 40%, #130a06 0%, var(--black) 100%);
+}
+.t-meta {
+  font-family:'Space Mono',monospace; font-size:8px; letter-spacing:5px; color:#252525;
+  text-transform:uppercase; margin-bottom:36px;
+  opacity:0; animation:up 0.8s ease 0.3s forwards;
+}
+.t-meta span { color:var(--red); }
+.t-name {
+  font-family:'Bebas Neue',sans-serif;
+  font-size: clamp(88px,22vw,220px);
+  line-height:0.85; letter-spacing:-2px; text-align:center;
+  color:var(--cream);
+  opacity:0; animation:revealUp 1.2s cubic-bezier(0.16,1,0.3,1) 0.6s forwards;
+}
+.t-hb {
+  font-family:'Bebas Neue',sans-serif;
+  font-size: clamp(18px,4vw,36px);
+  letter-spacing:10px; color:var(--red);
+  opacity:0; animation:up 1s ease 1.6s forwards;
+  margin-top:8px;
+}
+.t-sub {
+  font-family:'EB Garamond',serif; font-style:italic;
+  font-size:clamp(16px,2vw,22px); color:rgba(240,230,208,0.35);
+  margin-top:24px; letter-spacing:0.5px;
+  opacity:0; animation:up 1s ease 2.2s forwards; text-align:center;
+}
+.scroll-dots {
+  position:absolute; bottom:36px; left:50%; transform:translateX(-50%);
+  display:flex; gap:6px;
+  opacity:0; animation:up 1s ease 2.8s forwards;
+}
+.sd {
+  width:5px; height:5px; border-radius:50%; background:rgba(200,165,100,0.25);
+  animation:dp 1.8s ease-in-out infinite;
+}
+.sd:nth-child(2){animation-delay:0.3s} .sd:nth-child(3){animation-delay:0.6s}
+@keyframes dp{0%,100%{opacity:0.15;transform:scale(1)}50%{opacity:1;transform:scale(1.6)}}
+@keyframes up { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+@keyframes revealUp { from{opacity:0;clip-path:inset(0 0 100% 0)} to{opacity:1;clip-path:inset(0 0 0% 0)} }
+
+/* ── SCENE WRAPPER ── */
+.scene {
+  padding: 80px 24px 90px;
+  position:relative; overflow:hidden;
+}
+.scene:nth-child(odd) { background: var(--black); }
+.scene:nth-child(even) { background: #090909; }
+
+.scene-tag {
+  font-family:'Space Mono',monospace; font-size:8px; letter-spacing:5px;
+  color:var(--red); text-transform:uppercase;
+  display:flex; align-items:center; gap:10px; margin-bottom:52px;
+  opacity:0; transform:translateX(-16px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+.scene-tag::before { content:''; width:20px; height:1px; background:var(--red); flex-shrink:0; }
+.scene-tag.vis { opacity:1; transform:translateX(0); }
+
+.scene-inner { max-width:540px; margin:0 auto; }
+
+/* ── SVG ILLUSTRATIONS ── */
+.sketch-wrap {
+  width:100%; margin:0 auto 48px;
+  opacity:0; transform:translateY(24px);
+  transition: opacity 1s ease, transform 1s ease;
+}
+.sketch-wrap.vis { opacity:1; transform:translateY(0); }
+
+.sketch-wrap svg {
+  width:100%; height:auto;
+  display:block;
+}
+
+/* sketch line style */
+.sk-line {
+  fill:none;
+  stroke: var(--cream);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.sk-thin { stroke-width:1.2; stroke:rgba(240,230,208,0.7); }
+.sk-mid  { stroke-width:1.6; stroke:rgba(240,230,208,0.85); }
+.sk-bold { stroke-width:2;   stroke:var(--cream); }
+.sk-red  { stroke:var(--red); stroke-width:1.4; fill:none; stroke-linecap:round; }
+.sk-fill { fill:rgba(240,230,208,0.06); stroke:none; }
+.sk-fill-red { fill:rgba(192,57,43,0.12); stroke:none; }
+.sk-hair { fill:none; stroke:rgba(240,230,208,0.9); stroke-width:1.3; stroke-linecap:round; }
+.sk-shadow { fill:rgba(0,0,0,0.3); stroke:none; }
+
+/* draw-on animation */
+.draw {
+  stroke-dasharray: 1000;
+  stroke-dashoffset: 1000;
+  transition: stroke-dashoffset 2s ease;
+}
+.sketch-wrap.vis .draw { stroke-dashoffset: 0; }
+
+/* ── SCENE TEXT ── */
+.scene-quote {
+  font-family:'EB Garamond',serif; font-style:italic;
+  font-size:clamp(22px,3.5vw,36px); line-height:1.65; color:var(--cream);
+  text-align:center;
+  opacity:0; transform:translateY(16px);
+  transition: opacity 0.9s ease 0.2s, transform 0.9s ease 0.2s;
+}
+.scene-quote.vis { opacity:1; transform:translateY(0); }
+.scene-quote .r { color:var(--red); font-style:normal; }
+.scene-quote .soft { color:rgba(240,230,208,0.45); font-size:0.75em; display:block; margin-top:10px; font-style:normal; font-family:'Space Mono',monospace; letter-spacing:3px; }
+
+/* ── FINALE ── */
+#finale {
+  min-height:80vh;
+  display:flex; align-items:center; justify-content:center;
+  padding:80px 24px;
+  background: radial-gradient(ellipse 70% 50% at 50% 50%, #120600 0%, var(--black) 100%);
+}
+.finale-inner { text-align:center; }
+.fin-big {
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(60px,14vw,150px); line-height:0.88;
+  color:var(--cream);
+  opacity:0; transform:translateY(24px);
+  transition: opacity 1s ease, transform 1s ease;
+}
+.fin-big.vis { opacity:1; transform:translateY(0); }
+.fin-big .r { color:var(--red); display:block; }
+.fin-sub {
+  font-family:'EB Garamond',serif; font-style:italic;
+  font-size:clamp(17px,2.2vw,24px); color:rgba(240,230,208,0.35);
+  margin-top:20px; line-height:1.6;
+  opacity:0; transition:opacity 0.8s ease 0.5s;
+}
+.fin-sub.vis { opacity:1; }
+
+/* ── CREDITS ── */
+#credits {
+  background:var(--black); padding:60px 24px 90px; text-align:center;
+}
+.cred {
+  font-family:'Space Mono',monospace; font-size:9px;
+  letter-spacing:3px; color:#1c1c1c; text-transform:uppercase; line-height:2.6;
+  opacity:0; transition:opacity 0.5s ease;
+}
+.cred.vis { opacity:1; }
+.cred.hi { color:var(--red); font-size:10px; }
+.cred-gap { margin-top:14px; }
+
+@media(max-width:500px){
+  .scene { padding:60px 18px 70px; }
+  .scene-tag { font-size:7px; letter-spacing:3px; margin-bottom:36px; }
+}
+</style>
+</head>
+<body>
+
+<!-- CLAPPER -->
+<div id="clapper-screen">
+  <div class="clapper" onclick="roll()">
+    <div class="clap-top"><div class="clap-stripe s1"></div><div class="clap-stripe s2"></div></div>
+    <div class="clap-body">
+      <div class="clap-row"><span class="cl">Production</span><span class="cv r">For Jawahar</span></div>
+      <div class="clap-row"><span class="cl">Scene</span><span class="cv">Director's Cut</span></div>
+      <div class="clap-row"><span class="cl">Take</span><span class="cv">The Only One</span></div>
+      <div class="clap-row"><span class="cl">Date</span><span class="cv r">Today</span></div>
+    </div>
+  </div>
+  <p class="tap-hint">tap to roll</p>
+</div>
+<div id="swipe"><div class="sw"></div></div>
+
+<div id="main">
+
+  <!-- TITLE -->
+  <section id="title-section">
+    <p class="t-meta"><span>■ REC</span> &nbsp;·&nbsp; Birthday · Director's Cut</p>
+    <h1 class="t-name">JAWAHAR</h1>
+    <p class="t-hb">HAPPY BIRTHDAY</p>
+    <p class="t-sub">Some stories don't need a script.<br>They just happen, and you feel everything.</p>
+    <div class="scroll-dots"><div class="sd"></div><div class="sd"></div><div class="sd"></div></div>
+  </section>
+
+  <!-- SCENE 1: THEATRE -->
+  <section class="scene">
+    <div class="scene-inner">
+      <p class="scene-tag">Scene 01 &nbsp;·&nbsp; The Theatre</p>
+
+      <!-- SKETCH: Two people in theatre seats, holding hands, warm light from screen -->
+      <div class="sketch-wrap">
+        <svg viewBox="0 0 400 280" xmlns="http://www.w3.org/2000/svg">
+          <!-- screen glow -->
+          <defs>
+            <radialGradient id="screenGlow" cx="50%" cy="0%" r="60%">
+              <stop offset="0%" stop-color="#3a2a4a" stop-opacity="0.6"/>
+              <stop offset="100%" stop-color="#080808" stop-opacity="0"/>
+            </radialGradient>
+            <radialGradient id="handGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#C0392B" stop-opacity="0.15"/>
+              <stop offset="100%" stop-color="#C0392B" stop-opacity="0"/>
+            </radialGradient>
+          </defs>
+
+          <!-- background screen light wash -->
+          <rect x="0" y="0" width="400" height="120" fill="url(#screenGlow)"/>
+
+          <!-- cinema screen top -->
+          <rect x="60" y="18" width="280" height="70" rx="2" class="sk-fill"/>
+          <rect class="sk-line sk-thin draw" x="60" y="18" width="280" height="70" rx="2"/>
+          <!-- screen shimmer lines -->
+          <line class="sk-line sk-thin" x1="80" y1="35" x2="320" y2="35" stroke-opacity="0.12"/>
+          <line class="sk-line sk-thin" x1="80" y1="50" x2="320" y2="50" stroke-opacity="0.08"/>
+          <line class="sk-line sk-thin" x1="80" y1="65" x2="320" y2="65" stroke-opacity="0.08"/>
+          <!-- screen text hint -->
+          <text x="200" y="58" text-anchor="middle" font-family="EB Garamond, serif" font-style="italic" font-size="9" fill="rgba(240,230,208,0.15)" letter-spacing="2">thriller</text>
+
+          <!-- LEFT PERSON (her) - seat -->
+          <rect x="100" y="175" width="70" height="50" rx="6" class="sk-fill"/>
+          <rect class="sk-line sk-mid draw" x="100" y="175" width="70" height="50" rx="6"/>
+          <!-- seat back detail -->
+          <line class="sk-line sk-thin" x1="108" y1="178" x2="108" y2="220"/>
+          <line class="sk-line sk-thin" x1="162" y1="178" x2="162" y2="220"/>
+
+          <!-- LEFT PERSON body -->
+          <!-- torso -->
+          <path class="sk-line sk-mid draw" d="M118 172 Q120 155 125 148 Q130 140 135 138 Q140 136 145 138 Q150 140 152 148 Q157 155 158 172"/>
+          <!-- head -->
+          <ellipse class="sk-line sk-mid draw" cx="135" cy="128" rx="14" ry="16"/>
+          <!-- dark hair - longer, wavy -->
+          <path class="sk-hair draw" d="M121 122 Q118 110 122 100 Q128 88 135 86 Q142 88 148 100 Q152 110 149 122"/>
+          <path class="sk-hair draw" d="M121 122 Q116 128 118 136"/>
+          <path class="sk-hair draw" d="M149 122 Q152 115 150 108"/>
+          <!-- face hint -->
+          <circle cx="130" cy="126" r="1.5" fill="rgba(240,230,208,0.4)"/>
+          <circle cx="140" cy="126" r="1.5" fill="rgba(240,230,208,0.4)"/>
+          <path class="sk-line sk-thin" d="M131 134 Q135 137 139 134" stroke-width="1"/>
+          <!-- looking toward screen / slight tilt -->
+          <path class="sk-line sk-thin draw" d="M135 138 Q134 145 133 148"/>
+
+          <!-- RIGHT PERSON (him) - seat -->
+          <rect x="228" y="175" width="70" height="50" rx="6" class="sk-fill"/>
+          <rect class="sk-line sk-mid draw" x="228" y="175" width="70" height="50" rx="6"/>
+          <line class="sk-line sk-thin" x1="236" y1="178" x2="236" y2="220"/>
+          <line class="sk-line sk-thin" x1="290" y1="178" x2="290" y2="220"/>
+
+          <!-- RIGHT PERSON body -->
+          <path class="sk-line sk-mid draw" d="M242 172 Q244 155 248 148 Q253 138 263 136 Q273 138 278 148 Q282 155 284 172"/>
+          <!-- head - slightly taller, sharper jaw -->
+          <path class="sk-line sk-mid draw" d="M249 128 Q250 112 263 110 Q276 112 277 128 Q277 138 263 142 Q249 138 249 128"/>
+          <!-- dark hair - shorter, slight texture -->
+          <path class="sk-hair draw" d="M249 125 Q248 113 255 106 Q263 100 271 106 Q278 113 277 125"/>
+          <path class="sk-hair draw" d="M252 107 Q256 102 263 101"/>
+          <path class="sk-hair draw" d="M263 101 Q270 102 274 107"/>
+          <!-- face hint -->
+          <circle cx="257" cy="126" r="1.5" fill="rgba(240,230,208,0.4)"/>
+          <circle cx="269" cy="126" r="1.5" fill="rgba(240,230,208,0.4)"/>
+          <path class="sk-line sk-thin" d="M258 135 Q263 138 268 135" stroke-width="1"/>
+          <!-- jaw definition -->
+          <path class="sk-line sk-thin draw" d="M263 142 Q263 148 263 152" stroke-opacity="0.5"/>
+
+          <!-- HANDS HOLDING in middle -->
+          <ellipse cx="200" cy="195" rx="28" ry="14" fill="url(#handGlow)"/>
+          <!-- her hand reaching right -->
+          <path class="sk-line sk-bold draw" d="M170 192 Q180 188 192 190 Q198 192 200 195"/>
+          <!-- fingers her side -->
+          <path class="sk-line sk-thin draw" d="M175 189 Q177 184 180 187"/>
+          <path class="sk-line sk-thin draw" d="M181 187 Q183 181 186 185"/>
+          <path class="sk-line sk-thin draw" d="M188 185 Q190 179 193 184"/>
+          <!-- his hand reaching left -->
+          <path class="sk-line sk-bold draw" d="M230 192 Q220 188 208 190 Q202 192 200 195"/>
+          <!-- fingers his side -->
+          <path class="sk-line sk-thin draw" d="M225 189 Q223 184 220 187"/>
+          <path class="sk-line sk-thin draw" d="M219 187 Q217 181 214 185"/>
+          <path class="sk-line sk-thin draw" d="M212 185 Q210 179 207 184"/>
+          <!-- red heart tiny above hands -->
+          <path class="sk-red draw" d="M198 178 Q198 173 200 173 Q202 173 202 178 Q202 173 204 173 Q206 173 206 178 Q206 182 200 186 Q194 182 198 178"/>
+
+          <!-- armrest separation -->
+          <rect class="sk-line sk-thin" x="188" y="175" width="24" height="48" rx="3" fill="rgba(0,0,0,0.4)" stroke="rgba(240,230,208,0.1)"/>
+
+          <!-- ambient dots (popcorn?) -->
+          <circle cx="90" cy="195" r="2" fill="rgba(240,230,208,0.08)"/>
+          <circle cx="310" cy="200" r="2" fill="rgba(240,230,208,0.08)"/>
+          <circle cx="310" cy="192" r="1.5" fill="rgba(240,230,208,0.06)"/>
+
+          <!-- screen light on faces -->
+          <ellipse cx="135" cy="122" rx="18" ry="14" fill="rgba(100,80,180,0.06)"/>
+          <ellipse cx="263" cy="122" rx="18" ry="14" fill="rgba(100,80,180,0.06)"/>
+        </svg>
+      </div>
+
+      <p class="scene-quote">
+        Dark theatre. Somewhere in the middle,<br>
+        your hand found mine —<br>
+        and that was the only thing<br>
+        <span class="r">I remember.</span>
+        <span class="soft">INT. THEATRE · NIGHT</span>
+      </p>
+    </div>
+  </section>
+
+  <!-- SCENE 2: STAIR KISS -->
+  <section class="scene">
+    <div class="scene-inner">
+      <p class="scene-tag">Scene 02 &nbsp;·&nbsp; The Stairs</p>
+
+      <div class="sketch-wrap">
+        <svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <radialGradient id="warmLight" cx="50%" cy="40%" r="50%">
+              <stop offset="0%" stop-color="#3a1a08" stop-opacity="0.5"/>
+              <stop offset="100%" stop-color="#080808" stop-opacity="0"/>
+            </radialGradient>
+          </defs>
+
+          <rect x="0" y="0" width="400" height="300" fill="url(#warmLight)"/>
+
+          <!-- STAIRS -->
+          <!-- step 1 bottom -->
+          <rect class="sk-fill" x="40" y="238" width="320" height="22"/>
+          <path class="sk-line sk-thin draw" d="M40 238 L360 238 L360 260 L40 260 Z"/>
+          <!-- step 2 -->
+          <rect class="sk-fill" x="60" y="216" width="280" height="22"/>
+          <path class="sk-line sk-thin draw" d="M60 216 L340 216 L340 238 L60 238 Z"/>
+          <!-- step 3 -->
+          <rect class="sk-fill" x="80" y="194" width="240" height="22"/>
+          <path class="sk-line sk-thin draw" d="M80 194 L320 194 L320 216 L80 216 Z"/>
+          <!-- step 4 top -->
+          <rect class="sk-fill" x="100" y="172" width="200" height="22"/>
+          <path class="sk-line sk-thin draw" d="M100 172 L300 172 L300 194 L100 194 Z"/>
+
+          <!-- stair shadow details -->
+          <line class="sk-line sk-thin" x1="40" y1="260" x2="360" y2="260" stroke-opacity="0.3"/>
+          <line class="sk-line sk-thin" x1="60" y1="238" x2="340" y2="238" stroke-opacity="0.2"/>
+
+          <!-- RAILING -->
+          <line class="sk-line sk-thin draw" x1="340" y1="172" x2="360" y2="260" stroke-opacity="0.3"/>
+          <line class="sk-line sk-thin draw" x1="60" y1="172" x2="40" y2="260" stroke-opacity="0.3"/>
+
+          <!-- HER - standing one step lower, leaning up, tiptoe -->
+          <!-- her feet -->
+          <path class="sk-line sk-thin draw" d="M164 232 Q162 235 158 236" stroke-opacity="0.5"/>
+          <path class="sk-line sk-thin draw" d="M172 230 Q172 233 172 236" stroke-opacity="0.5"/>
+          <!-- her legs - one slightly raised (tiptoeing) -->
+          <path class="sk-line sk-mid draw" d="M158 236 Q160 220 163 216"/>
+          <path class="sk-line sk-mid draw" d="M172 234 Q173 218 171 216"/>
+          <!-- her body leaning forward/up -->
+          <path class="sk-line sk-mid draw" d="M163 216 Q162 205 163 196 Q164 188 167 182"/>
+          <path class="sk-line sk-mid draw" d="M171 216 Q172 205 171 196 Q170 188 169 182"/>
+          <!-- her arm reaching up around his neck -->
+          <path class="sk-line sk-mid draw" d="M167 190 Q165 178 172 168 Q178 160 188 158"/>
+          <path class="sk-line sk-thin draw" d="M169 192 Q168 180 175 170"/>
+          <!-- her head tilted up -->
+          <ellipse class="sk-line sk-mid draw" cx="174" cy="170" rx="13" ry="15"/>
+          <!-- her dark hair - long, flowing back slightly -->
+          <path class="sk-hair draw" d="M161 166 Q159 154 163 146 Q168 138 174 136 Q180 138 185 146 Q188 154 187 166"/>
+          <path class="sk-hair draw" d="M161 168 Q156 174 158 184 Q160 190 162 194"/>
+          <path class="sk-hair draw" d="M187 166 Q190 172 188 178"/>
+          <!-- her face tilted up, eyes closed -->
+          <path class="sk-line sk-thin draw" d="M168 167 Q170 165 173 166" stroke-opacity="0.6"/>
+          <path class="sk-line sk-thin draw" d="M176 167 Q178 165 180 166" stroke-opacity="0.6"/>
+
+          <!-- HIM - standing one step higher, leaning slightly down -->
+          <!-- his feet -->
+          <path class="sk-line sk-thin draw" d="M222 216 L218 220" stroke-opacity="0.5"/>
+          <path class="sk-line sk-thin draw" d="M234 216 L238 220" stroke-opacity="0.5"/>
+          <!-- his legs -->
+          <path class="sk-line sk-mid draw" d="M218 220 Q219 206 220 200"/>
+          <path class="sk-line sk-mid draw" d="M238 218 Q237 204 236 200"/>
+          <!-- his body - slightly taller -->
+          <path class="sk-line sk-mid draw" d="M220 200 Q219 188 219 178 Q219 168 221 160"/>
+          <path class="sk-line sk-mid draw" d="M236 200 Q237 188 237 178 Q237 168 235 160"/>
+          <!-- his arm around her waist -->
+          <path class="sk-line sk-mid draw" d="M220 188 Q210 192 200 193 Q192 193 188 190"/>
+          <path class="sk-line sk-thin draw" d="M220 194 Q210 198 200 198"/>
+          <!-- his other hand on her face/cheek -->
+          <path class="sk-line sk-mid draw" d="M235 162 Q220 158 210 162 Q200 166 196 172"/>
+          <!-- his head tilted down toward her -->
+          <path class="sk-line sk-mid draw" d="M221 158 Q222 144 228 140 Q234 136 240 138 Q246 141 248 148 Q250 156 247 162 Q243 168 236 168 Q227 168 221 158"/>
+          <!-- his dark hair - shorter -->
+          <path class="sk-hair draw" d="M221 155 Q220 143 226 136 Q232 130 238 133 Q244 137 247 148"/>
+          <path class="sk-hair draw" d="M224 136 Q228 131 234 130 Q240 131 244 136"/>
+          <!-- his face - eyes slightly closed, leaning to her -->
+          <path class="sk-line sk-thin draw" d="M228 152 Q230 150 233 151" stroke-opacity="0.6"/>
+          <path class="sk-line sk-thin draw" d="M236 151 Q238 149 241 150" stroke-opacity="0.6"/>
+
+          <!-- THE KISS - lips meeting point, subtle -->
+          <path class="sk-red draw" d="M187 168 Q190 166 192 168 Q194 166 196 168" stroke-width="1.2" stroke-opacity="0.7"/>
+          <!-- red glow at kiss point -->
+          <ellipse cx="192" cy="168" rx="16" ry="10" fill="rgba(192,57,43,0.07)"/>
+
+          <!-- ambient: wall texture behind -->
+          <line class="sk-line sk-thin" x1="50" y1="30" x2="50" y2="170" stroke-opacity="0.05"/>
+          <line class="sk-line sk-thin" x1="350" y1="30" x2="350" y2="170" stroke-opacity="0.05"/>
+          <line class="sk-line sk-thin" x1="50" y1="80" x2="350" y2="80" stroke-opacity="0.04"/>
+          <line class="sk-line sk-thin" x1="50" y1="130" x2="350" y2="130" stroke-opacity="0.04"/>
+
+          <!-- warm light source top -->
+          <circle cx="200" cy="20" r="60" fill="rgba(200,130,60,0.04)"/>
+        </svg>
+      </div>
+
+      <p class="scene-quote">
+        You were a step below —<br>
+        and you still reached up for me<br>
+        like I was <span class="r">exactly where you wanted to be.</span>
+        <br><br>
+        Few moments. No filter.<br>
+        <span class="r">Impossible to forget.</span>
+        <span class="soft">EXT. STAIRS · GOLDEN HOUR</span>
+      </p>
+    </div>
+  </section>
+
+  <!-- SCENE 3: LATE NIGHT TALKS -->
+  <section class="scene">
+    <div class="scene-inner">
+      <p class="scene-tag">Scene 03 &nbsp;·&nbsp; Late Night</p>
+
+      <div class="sketch-wrap">
+        <svg viewBox="0 0 400 260" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <radialGradient id="phoneGlow" cx="50%" cy="60%" r="50%">
+              <stop offset="0%" stop-color="#1a2a3a" stop-opacity="0.5"/>
+              <stop offset="100%" stop-color="#080808" stop-opacity="0"/>
+            </radialGradient>
+            <radialGradient id="lampGlow" cx="50%" cy="30%" r="40%">
+              <stop offset="0%" stop-color="#3a200a" stop-opacity="0.6"/>
+              <stop offset="100%" stop-color="#080808" stop-opacity="0"/>
+            </radialGradient>
+          </defs>
+
+          <rect x="0" y="0" width="400" height="260" fill="url(#lampGlow)"/>
+
+          <!-- ── HIM: lying down, phone, left side ── -->
+          <!-- bed/floor surface hint -->
+          <path class="sk-line sk-thin draw" d="M10 180 Q60 178 120 180 Q160 182 180 180" stroke-opacity="0.2"/>
+
+          <!-- pillow -->
+          <path class="sk-fill" d="M20 155 Q40 148 80 150 Q100 151 105 158 Q100 168 80 170 Q40 168 20 165 Z"/>
+          <path class="sk-line sk-thin draw" d="M20 155 Q40 148 80 150 Q100 151 105 158 Q100 168 80 170 Q40 168 20 165 Z"/>
+
+          <!-- blanket/body lying -->
+          <path class="sk-fill" d="M30 170 Q70 165 130 168 Q160 170 175 175 Q170 190 150 192 Q110 195 60 192 Q30 190 25 182 Z"/>
+          <path class="sk-line sk-mid draw" d="M30 170 Q70 165 130 168 Q160 170 175 175 Q170 190 150 192 Q110 195 60 192 Q30 190 25 182 Z"/>
+          <!-- blanket fold lines -->
+          <path class="sk-line sk-thin draw" d="M40 170 Q50 172 55 178 Q52 188 44 190" stroke-opacity="0.3"/>
+          <path class="sk-line sk-thin draw" d="M90 166 Q100 168 105 175 Q102 186 95 189" stroke-opacity="0.3"/>
+
+          <!-- his head on pillow -->
+          <ellipse class="sk-line sk-mid draw" cx="65" cy="150" rx="20" ry="17"/>
+          <!-- his dark hair - messy night hair -->
+          <path class="sk-hair draw" d="M45 146 Q44 134 52 128 Q58 124 65 123 Q72 124 78 128 Q85 134 85 146"/>
+          <path class="sk-hair draw" d="M46 144 Q43 140 44 136"/>
+          <path class="sk-hair draw" d="M50 128 Q54 122 60 120 Q66 119 71 121"/>
+          <path class="sk-hair draw" d="M75 126 Q79 130 82 136"/>
+          <!-- face - slight smile, relaxed -->
+          <path class="sk-line sk-thin draw" d="M57 148 Q59 146 62 147" stroke-opacity="0.5"/>
+          <path class="sk-line sk-thin draw" d="M68 147 Q71 145 73 147" stroke-opacity="0.5"/>
+          <path class="sk-line sk-thin draw" d="M59 156 Q65 160 71 156" stroke-width="1.2"/>
+
+          <!-- his arm holding phone up -->
+          <path class="sk-line sk-mid draw" d="M80 160 Q95 152 108 145 Q115 140 118 135"/>
+          <!-- phone -->
+          <rect class="sk-fill" x="110" y="118" width="24" height="40" rx="3"/>
+          <rect class="sk-line sk-mid draw" x="110" y="118" width="24" height="40" rx="3"/>
+          <!-- phone screen blue glow -->
+          <rect x="113" y="122" width="18" height="30" rx="1" fill="rgba(100,160,255,0.12)"/>
+          <rect class="sk-line sk-thin" x="113" y="122" width="18" height="30" rx="1" stroke-opacity="0.3"/>
+          <!-- chat bubbles on screen -->
+          <rect x="115" y="124" width="12" height="5" rx="2" fill="rgba(192,57,43,0.4)"/>
+          <rect x="116" y="131" width="10" height="4" rx="2" fill="rgba(240,230,208,0.2)"/>
+          <rect x="115" y="137" width="13" height="4" rx="2" fill="rgba(192,57,43,0.35)"/>
+          <!-- phone light on his face -->
+          <ellipse cx="68" cy="148" rx="22" ry="18" fill="rgba(100,140,255,0.05)"/>
+
+          <!-- ── HER: sitting up, right side, cozy ── -->
+          <!-- her background wall -->
+          <rect x="230" y="80" width="160" height="180" rx="0" fill="rgba(240,230,208,0.02)"/>
+          <line class="sk-line sk-thin" x1="230" y1="80" x2="230" y2="260" stroke-opacity="0.1"/>
+
+          <!-- floor/surface she's sitting on -->
+          <path class="sk-fill" d="M225 220 Q280 215 390 220 L390 260 L225 260 Z" fill-opacity="0.03"/>
+          <path class="sk-line sk-thin draw" d="M225 220 Q280 215 390 218" stroke-opacity="0.15"/>
+
+          <!-- her cozy blanket wrap -->
+          <path class="sk-fill" d="M248 190 Q260 175 280 172 Q295 170 305 175 Q318 182 320 200 Q318 220 305 228 Q285 235 265 228 Q248 220 245 205 Z"/>
+          <path class="sk-line sk-mid draw" d="M248 190 Q260 175 280 172 Q295 170 305 175 Q318 182 320 200 Q318 220 305 228 Q285 235 265 228 Q248 220 245 205 Z"/>
+          <!-- blanket fold -->
+          <path class="sk-line sk-thin draw" d="M260 176 Q265 185 268 198 Q266 212 260 220" stroke-opacity="0.25"/>
+
+          <!-- her body sitting -->
+          <path class="sk-line sk-mid draw" d="M272 172 Q271 158 272 150 Q273 142 276 136"/>
+          <path class="sk-line sk-mid draw" d="M288 172 Q289 158 288 150 Q287 142 284 136"/>
+
+          <!-- her head -->
+          <ellipse class="sk-line sk-mid draw" cx="280" cy="122" rx="15" ry="17"/>
+          <!-- her dark hair - long, loose at night -->
+          <path class="sk-hair draw" d="M265 118 Q263 106 268 98 Q274 90 280 88 Q286 90 292 98 Q297 106 295 118"/>
+          <path class="sk-hair draw" d="M265 120 Q260 128 262 140 Q264 150 268 158"/>
+          <path class="sk-hair draw" d="M295 120 Q298 126 297 134"/>
+          <path class="sk-hair draw" d="M267 96 Q272 90 280 88"/>
+          <!-- her face - soft smile, looking at phone -->
+          <path class="sk-line sk-thin draw" d="M274 120 Q276 118 279 119" stroke-opacity="0.5"/>
+          <path class="sk-line sk-thin draw" d="M281 119 Q284 117 286 119" stroke-opacity="0.5"/>
+          <path class="sk-line sk-thin draw" d="M275 129 Q280 133 285 129" stroke-width="1.3"/>
+
+          <!-- her arm holding phone -->
+          <path class="sk-line sk-mid draw" d="M285 138 Q295 142 306 148 Q312 152 314 157"/>
+          <!-- her phone -->
+          <rect class="sk-fill" x="308" y="148" width="22" height="38" rx="3"/>
+          <rect class="sk-line sk-mid draw" x="308" y="148" width="22" height="38" rx="3"/>
+          <rect x="311" y="152" width="16" height="28" rx="1" fill="rgba(100,160,255,0.1)"/>
+          <rect class="sk-line sk-thin" x="311" y="152" width="16" height="28" rx="1" stroke-opacity="0.25"/>
+          <!-- chat bubbles on her screen -->
+          <rect x="312" y="154" width="13" height="5" rx="2" fill="rgba(240,230,208,0.2)"/>
+          <rect x="312" y="161" width="11" height="4" rx="2" fill="rgba(192,57,43,0.4)"/>
+          <rect x="312" y="167" width="13" height="4" rx="2" fill="rgba(240,230,208,0.18)"/>
+          <!-- phone light on her face -->
+          <ellipse cx="280" cy="120" rx="20" ry="17" fill="rgba(100,140,255,0.05)"/>
+
+          <!-- ── CONNECTING ELEMENT: speech bubble / message floating between ── -->
+          <path class="sk-red draw" d="M135 132 Q155 118 175 122 Q195 126 195 138 Q195 150 175 154 Q165 156 155 150 L140 158 L150 148 Q130 146 130 138 Q130 132 135 132"/>
+          <text x="163" y="142" text-anchor="middle" font-family="EB Garamond, serif" font-style="italic" font-size="8" fill="rgba(192,57,43,0.6)">still awake?</text>
+
+          <!-- stars in dark background -->
+          <circle cx="210" cy="40" r="1" fill="rgba(240,230,208,0.3)"/>
+          <circle cx="185" cy="60" r="0.8" fill="rgba(240,230,208,0.2)"/>
+          <circle cx="220" cy="70" r="0.8" fill="rgba(240,230,208,0.25)"/>
+          <circle cx="168" cy="45" r="1" fill="rgba(240,230,208,0.2)"/>
+          <circle cx="200" cy="30" r="0.7" fill="rgba(240,230,208,0.15)"/>
+
+          <!-- 2am text hint -->
+          <text x="200" y="25" text-anchor="middle" font-family="Space Mono, monospace" font-size="8" fill="rgba(240,230,208,0.08)" letter-spacing="3">2:47 AM</text>
+        </svg>
+      </div>
+
+      <p class="scene-quote">
+        Those first conversations —<br>
+        neither of us meant to stay up that long.<br>
+        But the night just… kept going.<br>
+        And somewhere between<br>
+        3am and nothing making sense,<br>
+        <span class="r">I was already gone.</span>
+        <span class="soft">INT. SEPARATE ROOMS · SAME FEELING</span>
+      </p>
+    </div>
+  </section>
+
+  <!-- FINALE -->
+  <section id="finale">
+    <div class="finale-inner">
+      <h2 class="fin-big">
+        Happy<br>
+        <span class="r">Birthday</span>
+        Jawahar
+      </h2>
+      <p class="fin-sub">
+        May this year have plot twists that make you smile,<br>
+        shots that take your breath away,<br>
+        and someone in every scene who picks you.
+      </p>
+    </div>
+  </section>
+
+
+
+</div>
+
+<script>
+function roll() {
+  const sw = document.getElementById('swipe');
+  sw.classList.add('on');
+  setTimeout(() => {
+    document.getElementById('clapper-screen').classList.add('gone');
+    document.getElementById('main').style.display = 'block';
+  }, 480);
+  setTimeout(() => sw.classList.remove('on'), 700);
+}
+
+const io = new IntersectionObserver(entries => {
+  entries.forEach(e => { if(e.isIntersecting) e.target.classList.add('vis'); });
+}, { threshold: 0.1 });
+
+document.querySelectorAll('.scene-tag, .sketch-wrap, .scene-quote, .fin-big, .fin-sub, .cred')
+  .forEach(el => io.observe(el));
+
+document.querySelectorAll('.cred').forEach((el,i) => { el.style.transitionDelay = (i*0.12)+'s'; });
+</script>
+</body>
+</html>
